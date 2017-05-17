@@ -214,7 +214,7 @@ bool Init()
 void Render()
 {
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	
 	//Update the uniform buffer objects in the shaders with the latest proj and view matrix
 	BindUBO();

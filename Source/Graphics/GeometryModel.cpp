@@ -2,9 +2,6 @@
 
 GLfloat points[] = {
 	-0.5f,  0.5f, -5.0f,  1.0f, 0.0f, 0.0f, // Top-left
-	0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // Top-right
-	0.5f, -0.5f, 5.0f, 0.0f, 0.0f, 1.0f, // Bottom-right
-	-0.5f, -0.5f, 7.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
 };
 GeometryModel::GeometryModel(GLuint program, Camera* camera)
 {
@@ -35,7 +32,7 @@ GeometryModel::Render()
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	glBindVertexArray(vao);
-	glDrawArrays(GL_POINTS, 0, 4);
+	glDrawArrays(GL_POINTS, 0, 1);
 	glBindVertexArray(0);
 			
 
