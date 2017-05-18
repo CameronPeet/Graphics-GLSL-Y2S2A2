@@ -51,6 +51,7 @@
     <None Include="assets\shaders\geometry_model_star.vert" />
     <None Include="assets\shaders\geometry_model_star.frag" />
     <None Include="assets\shaders\geometry_model_star.gs" />
+    <None Include="assets\shaders\Multiple.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utility\ShaderLoader.h">
@@ -93,5 +94,6 @@
     <ClCompile Include="Graphics\ObjModel.cpp" />
     <ClCompile Include="Graphics\Terrain.cpp" />
     <ClCompile Include="Graphics\GeometryModel.cpp" />
+    <ClCompile Include="Graphics\Light.cpp" />
   </ItemGroup>
 </Project>

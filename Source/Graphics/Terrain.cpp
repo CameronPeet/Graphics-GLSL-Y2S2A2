@@ -297,10 +297,10 @@ void Terrain::Render() {
 	glUniform3f(lightColorLoc, this->light->Color.x, this->light->Color.y, this->light->Color.z);
 
 	GLuint specularStrengthLoc = glGetUniformLocation(program, "specularStrength");
-	glUniform1f(specularStrengthLoc, 0.1f);
+	glUniform1f(specularStrengthLoc, light->Intensity);
 
 	GLuint ambientStrengthLoc = glGetUniformLocation(program, "ambientStrength");
-	glUniform1f(ambientStrengthLoc, 0.5f);
+	glUniform1f(ambientStrengthLoc, 0.2f);
 
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);

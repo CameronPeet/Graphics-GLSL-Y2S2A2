@@ -10,7 +10,6 @@ out vec2 TexCoord;
 out vec3 Normal;
 out vec3 FragPos;
 
-
 layout (std140) uniform Matrices
 {
     mat4 projection;

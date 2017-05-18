@@ -32,6 +32,7 @@
     <None Include="assets\shaders\geometry_show_normals.vs" />
     <None Include="assets\shaders\heightmap.fs" />
     <None Include="assets\shaders\heightmap.vs" />
+    <None Include="assets\shaders\Multiple.frag" />
     <None Include="assets\shaders\Reflection.frag" />
     <None Include="assets\shaders\Reflection.vert" />
     <None Include="assets\shaders\Shader.frag" />
@@ -42,6 +43,7 @@
   <ItemGroup>
     <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="Graphics\GeometryModel.cpp" />
+    <ClCompile Include="Graphics\Light.cpp" />
     <ClCompile Include="Graphics\Model.cpp" />
     <ClCompile Include="Graphics\ObjModel.cpp" />
     <ClCompile Include="Graphics\Terrain.cpp" />

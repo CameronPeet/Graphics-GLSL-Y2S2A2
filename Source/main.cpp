@@ -65,7 +65,9 @@ GLuint terrainShader;
 GLuint geometry_explode_shader;
 GLuint geometry_show_normals;
 GLuint geometry_model_star;
+GLuint geometry_shader_star_world;
 
+//Adding shader to alist that is generating the uniform buffer objects for these shaders
 GLuint* AllShaders[] =
 { 
 	&standardShader, 
@@ -74,7 +76,8 @@ GLuint* AllShaders[] =
 	&terrainShader, 
 	&geometry_explode_shader,
 	&geometry_show_normals,
-	&geometry_model_star
+	&geometry_model_star,
+	&geometry_shader_star_world
 
 };
 
@@ -82,12 +85,17 @@ GLuint* AllShaders[] =
 //Global Rendering Components and CObjects
 Camera g_Camera;
 SkyBox g_SkyBox;
+
+
 Light g_GlobalLight;
+Model g_lightModel;
 ObjModel g_Castle3D;
 ObjModel g_NanoSuit;
 Terrain g_Terrain3D;
 GeometryModel g_ModelGS;
 
+
+//Movement variables
 glm::vec3 g_Movement;
 glm::vec2 g_MousePos;
 
@@ -95,6 +103,10 @@ float lastX = 600.0f, lastY = 400.0f;
 float yaw = 90.0f, pitch = 0.0f;
 bool firstMouse = true;
 
+
+bool MovingCamera = true;
+bool MovingLight = false;
+bool SpaceDown = false;
 //What are your start up options
 int main(int argc, char ** argv)
 {
@@ -138,7 +150,7 @@ bool Init()
 	//Load and create shader files
 	standardShader	= shaderLoader.CreateProgram(
 		"Assets/shaders/Shader.vert", 
-		"Assets/shaders/Shader.frag");
+		"Assets/shaders/Multiple.frag");
 
 	skyboxShader	= shaderLoader.CreateProgram(
 		"Assets/shaders/Skybox.vs", 
@@ -167,12 +179,20 @@ bool Init()
 		"Assets/shaders/geometry_model_star.frag",
 		"Assets/shaders/geometry_model_star.gs");
 
+	geometry_shader_star_world = shaderLoader.CreateProgram(
+		"Assets/shaders/geometry_shader_star_world.vert",
+		"Assets/shaders/geometry_model_star.frag",
+		"Assets/shaders/geometry_model_star.gs");
+
 	//Camera creation
 	g_Camera.SetPosition(glm::vec3(0.0f, 2.0f, 10.0f));
 	g_Camera.SetViewPort(0, 0, 1200.0f, 800.0f);
 	g_Camera.SetProjection(45.0f, (float)(1200.0f / 800.0f), 0.1f, 1000.0f);
 
 	g_GlobalLight.Position.y += 10.0f;
+	g_lightModel = Model(SPHERE, "Assets/textures/Ball.jpg");
+	g_lightModel.Initialise();
+	g_lightModel.m_Scale = glm::vec3(0.4f, 0.4f, 0.4f);
 
 	//Skybox creation
 	g_SkyBox = SkyBox(CUBE, 
@@ -222,6 +242,9 @@ void Render()
 	//Render Skybox
 	g_SkyBox.Render(skyboxShader, g_Camera);
 
+	g_lightModel.m_Position = g_GlobalLight.Position;
+	g_lightModel.Render(standardShader, g_Camera);
+
 	////Render 3D Models
 	g_Castle3D.Render();
 
@@ -240,6 +263,12 @@ void Render()
 	////Render Terrain
 	g_Terrain3D.Render();
 
+	//Rendering onto NDC screen space
+	g_ModelGS.program = geometry_model_star;
+	g_ModelGS.Render();
+
+	//Rendering into 3D Space
+	g_ModelGS.program = geometry_shader_star_world;
 	g_ModelGS.Render();
 
 	//Render Shape Models
@@ -251,6 +280,7 @@ void Render()
 }
 void Update()
 {
+	MovingCamera = MovingLight ? false : true;
 
 	g_CurrentTicks = std::clock();
 	float deltaTicks = (float)(g_CurrentTicks - g_PreviousTicks);
@@ -268,9 +298,10 @@ void Update()
 
 	glUseProgram(0);
 
-
-	g_Camera.Translate(g_Movement * 10.0f * fDeltaTime);
-
+	if (MovingCamera)
+		g_Camera.Translate(g_Movement * 10.0f * fDeltaTime);
+	else if (MovingLight)
+		g_GlobalLight.Position += (g_Movement * 10.0f * fDeltaTime);
 
 	g_WindowRunning = true;
 	Sleep(10);
@@ -304,7 +335,12 @@ void KeyDown(unsigned char key, int x, int y)
 	case 'E':
 		g_Movement.y = 1.0f;
 		break;
+	case VK_SPACE:
+		
+		MovingLight = SpaceDown ? false : MovingLight ? false : true;
 
+		break;
+	
 	case VK_ESCAPE:
 		glutLeaveMainLoop();
 		break;
@@ -385,18 +421,23 @@ void PassiveMotion(int x, int y)
 	yoffset *= sensitivity;
 
 	yaw += xoffset;
+
 	pitch += yoffset;
 
-	if (pitch > 89.0f)
-		pitch = 89.0f;
-	if (pitch < -89.0f)
-		pitch = -89.0f;
+	float maxPitch = glm::radians(89.0f);
+	if (pitch > maxPitch)
+		pitch = maxPitch;
+	if (pitch < -maxPitch)
+		pitch = -maxPitch;
 
 
 
 	g_Camera.SetRotation(glm::quat());
 	g_Camera.Rotate(glm::angleAxis(-yaw, glm::vec3(0, 1, 0)));
 	g_Camera.Rotate(glm::angleAxis(pitch, glm::vec3(1, 0, 0)));
+
+	glm::vec3 euler = g_Camera.GetEulerAngles();
+
 
 
 	ResetPointer();
@@ -432,4 +473,5 @@ void BindUBO()
 	glBindBuffer(GL_UNIFORM_BUFFER, g_uboMatrices);
 	glBufferSubData(GL_UNIFORM_BUFFER, 1 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(g_Camera.GetViewMatrix()));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 }

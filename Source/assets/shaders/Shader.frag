@@ -60,13 +60,3 @@ void main()
 	
 
 }
-
-/*
-float ambientStrength = 0.5f;
-	vec3 ambientValue = ambientStrength * vec3(1, 0, 1); //lightColor;
-	vec3 finalObjectLight = ambientValue * outColor;
-	color = vec4(finalObjectLight, 1.0f);
-
-
-    //color = mix(texture(Texture, TexCoord), texture(Texture2, TexCoord), 0.5) * vec4(outColor, 10.f) ; //* abs(sin(currentTime));  
-*/
