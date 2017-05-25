@@ -63,11 +63,12 @@ public:
 			stringstream ss;
 			string number;
 			string name = this->textures[i].type;
-			if (name == "texture_diffuse")
+			if (name == "material.texture_diffuse1")
 				ss << diffuseNr++; // Transfer GLuint to stream
-			else if (name == "texture_specular")
+			else if (name == "material.texture_specular1")
 				ss << specularNr++; // Transfer GLuint to stream
 			number = ss.str();
+
 			// Now set the sampler to the correct texture unit
 			glUniform1i(glGetUniformLocation(program, (name + number).c_str()), i);
 			// And finally bind the texture
@@ -76,6 +77,15 @@ public:
 
 		GLint modelLoc = glGetUniformLocation(program, "model");
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+		GLint cameraPosLoc = glGetUniformLocation(program, "viewPos");
+		GLint normalMatrixLoc = glGetUniformLocation(program, "normalMatrix");
+		glm::mat4 normalMatrix;
+		normalMatrix = glm::transpose(glm::inverse(modelMatrix * camera->GetViewMatrix()));
+
+		//Send the values to the uniform variables in the program supplied in the function call
+		glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+		glUniformMatrix4fv(cameraPosLoc, 1, GL_FALSE, glm::value_ptr(camera->GetPosition()));
 
 		// Draw mesh
 		glBindVertexArray(this->VAO);

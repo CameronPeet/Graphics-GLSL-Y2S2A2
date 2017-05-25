@@ -35,5 +35,5 @@ GeometryModel::Render()
 	glDrawArrays(GL_POINTS, 0, 1);
 	glBindVertexArray(0);
 			
-
+	glUseProgram(0);
 }

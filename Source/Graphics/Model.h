@@ -66,17 +66,23 @@ public:
 	//Render the model using an externaly provided camera for projection and view matrix, and an externally supplied program.
 	virtual void Render(GLuint program, Camera& camera, Light* lightSource = nullptr);
 	virtual void Initialise();
+	virtual void Initialise2();
 
 	//void Render(Camera& camera);
 	//void Initialise(vec3 _vPosition = 0, vec3 _vScale = 1, vec3 _qRot = 0);
 	
-
-public:
 
 
 	//Attributes
 	float Specular;
 	float Ambient;
 	glm::vec3 ObjectColor;
-	
+
+
+//INHERIT TO NEW CLASS LATER
+	char* texture1Path;
+	char* texture2Path;
+	virtual void Render(RenderStruct& render);
+	Model(ModelType Shape, char* Diffuse, char* Specular, float Shine);
+
 };

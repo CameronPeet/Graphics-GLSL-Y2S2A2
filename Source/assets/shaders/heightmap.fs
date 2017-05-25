@@ -66,6 +66,8 @@ void main(){
 	
 	else vTexColor = texture2D(texture2, TexCoord);
 	
+
+
 	//lighting
 	//**ambient
 		vec3 ambient = ambientStrength * lightColor;

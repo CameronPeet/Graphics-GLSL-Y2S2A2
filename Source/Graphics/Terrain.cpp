@@ -306,3 +306,67 @@ void Terrain::Render() {
 	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
+
+void Terrain::Render(RenderStruct & render)
+{
+
+	GLuint& tprogram = render.program;
+	Camera& camera = render.camera;
+	DirLight& dirLight = render.dirLight;
+	PointLight& pointLight = render.pointLight;
+	SpotLight& spotLight = render.spotLight;
+	glUseProgram(tprogram);
+
+
+	dirLight.PassUniforms(tprogram);
+	pointLight.PassUniforms(tprogram);
+	spotLight.PassUniforms(tprogram);
+
+	GLint modelLoc = glGetUniformLocation(tprogram, "model");
+	GLint cameraPosLoc = glGetUniformLocation(tprogram, "viewPos");
+	GLint normalMatrixLoc = glGetUniformLocation(tprogram, "normalMatrix");
+
+	//if(bIsTextureSet)
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glUniform1i(glGetUniformLocation(tprogram, "texture0"), 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+	glUniform1i(glGetUniformLocation(tprogram, "texture1"), 1);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, texture2);
+	glUniform1i(glGetUniformLocation(tprogram, "texture2"), 2);
+
+
+	glm::mat4 model;
+	//Translate the model according to its position and apply the rotation
+	model = glm::translate(model, m_Position) * glm::mat4(m_Rotation);
+
+	//Rotation points
+	if (m_RotationPoint != glm::vec3(0, 0, 0))
+		model = glm::translate(model, m_Position - m_RotationPoint);
+
+	//Scale the model according to private member m_Scale
+	model = glm::scale(model, m_Scale);
+	glm::mat4 normalMatrix;
+	normalMatrix = glm::transpose(glm::inverse(model * camera.GetViewMatrix()));
+
+
+	//Send the values to the uniform variables in the program supplied in the function call
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+	glUniformMatrix4fv(cameraPosLoc, 1, GL_FALSE, glm::value_ptr(camera.GetPosition()));
+
+	//Bind the texture to the uniform variable 
+	// Bind diffuse map
+
+
+	//Bind, draw and unbind the vertex array 
+	glBindVertexArray(vao);
+	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+
+	glUseProgram(0);
+}

@@ -53,19 +53,23 @@ std::clock_t g_CurrentTicks;
 
 //Uniform buffer objects for uniform mat4's across all shaders (Camera Projectiona nd View matrix)
 GLuint g_uboMatrices;
-
+GLuint g_uboLights;
 //Global Shader Programs
 ShaderLoader shaderLoader;
 GLuint standardShader;
 GLuint skyboxShader;
 GLuint objModelShader;
 GLuint terrainShader;
+GLuint multiple_light_shader;
 
 //Global geometry shaders
 GLuint geometry_explode_shader;
 GLuint geometry_show_normals;
 GLuint geometry_model_star;
 GLuint geometry_shader_star_world;
+
+//Multiple Lights in UBO for 3D Model with Multiple Lights shader
+GLuint objModelWithLights;
 
 //Adding shader to alist that is generating the uniform buffer objects for these shaders
 GLuint* AllShaders[] =
@@ -77,8 +81,8 @@ GLuint* AllShaders[] =
 	&geometry_explode_shader,
 	&geometry_show_normals,
 	&geometry_model_star,
-	&geometry_shader_star_world
-
+	&geometry_shader_star_world,
+	&multiple_light_shader
 };
 
 
@@ -94,6 +98,14 @@ ObjModel g_NanoSuit;
 Terrain g_Terrain3D;
 GeometryModel g_ModelGS;
 
+
+//NEW STUFF
+DirLight g_DirLight;
+PointLight g_PointLight;
+SpotLight g_SpotLight;
+Model modelType2;
+
+void InitLights(DirLight& dirLight, PointLight& pointLight, SpotLight& spotLight);
 
 //Movement variables
 glm::vec3 g_Movement;
@@ -147,22 +159,30 @@ int main(int argc, char ** argv)
 
 bool Init()
 {
+
+	objModelWithLights = shaderLoader.CreateProgram(
+			"Assets/shaders/3D_Model_WithLighting.vert",
+			"Assets/shaders/3D_Model_WithLighting.frag");
 	//Load and create shader files
+	multiple_light_shader = shaderLoader.CreateProgram(
+		"Assets/shaders/MultipleLights.vert",
+		"Assets/shaders/MultipleLights.frag");
+
 	standardShader	= shaderLoader.CreateProgram(
 		"Assets/shaders/Shader.vert", 
-		"Assets/shaders/Multiple.frag");
+		"Assets/shaders/Shader.frag");
 
 	skyboxShader	= shaderLoader.CreateProgram(
 		"Assets/shaders/Skybox.vs", 
 		"Assets/shaders/Skybox.frag");
 
 	objModelShader	= shaderLoader.CreateProgram(
-		"Assets/shaders/3D_Model.vert",
-		"Assets/shaders/3D_Model.frag");
+		"Assets/shaders/3D_Model_WithLighting.vert",
+		"Assets/shaders/3D_Model_WithLighting.frag");
 
 	terrainShader = shaderLoader.CreateProgram(
-		"Assets/shaders/heightmap.vs",
-		"Assets/shaders/heightmap.fs");
+		"Assets/shaders/heightmap_mult.vert",
+		"Assets/shaders/heightmap_mult.frag");
 
 	geometry_explode_shader = shaderLoader.CreateProgram(
 		"Assets/shaders/geometry_explode.vs",
@@ -188,6 +208,12 @@ bool Init()
 	g_Camera.SetPosition(glm::vec3(0.0f, 2.0f, 10.0f));
 	g_Camera.SetViewPort(0, 0, 1200.0f, 800.0f);
 	g_Camera.SetProjection(45.0f, (float)(1200.0f / 800.0f), 0.1f, 1000.0f);
+
+
+	InitLights(g_DirLight, g_PointLight, g_SpotLight);
+
+	modelType2 = Model(CUBE, "Assets/Textures/container2.jpg", "Assets/Textures/container2.png", 32.0f);
+	modelType2.Initialise2();
 
 	g_GlobalLight.Position.y += 10.0f;
 	g_lightModel = Model(SPHERE, "Assets/textures/Ball.jpg");
@@ -239,11 +265,16 @@ void Render()
 	//Update the uniform buffer objects in the shaders with the latest proj and view matrix
 	BindUBO();
 
+	g_SpotLight.direction = glm::normalize(g_Camera.GetRayTo(600, 400));
+	g_SpotLight.position = g_Camera.GetPosition();
+
 	//Render Skybox
 	g_SkyBox.Render(skyboxShader, g_Camera);
 
-	g_lightModel.m_Position = g_GlobalLight.Position;
-	g_lightModel.Render(standardShader, g_Camera);
+	RenderStruct renderStruct = RenderStruct(multiple_light_shader, g_Camera, g_DirLight, g_PointLight, g_SpotLight);
+
+	renderStruct.program = multiple_light_shader;
+	modelType2.Render(renderStruct);
 
 	////Render 3D Models
 	g_Castle3D.Render();
@@ -261,7 +292,8 @@ void Render()
 	g_NanoSuit.m_Position = pos;
 
 	////Render Terrain
-	g_Terrain3D.Render();
+	renderStruct.program = terrainShader;
+	g_Terrain3D.Render(renderStruct);
 
 	//Rendering onto NDC screen space
 	g_ModelGS.program = geometry_model_star;
@@ -301,7 +333,7 @@ void Update()
 	if (MovingCamera)
 		g_Camera.Translate(g_Movement * 10.0f * fDeltaTime);
 	else if (MovingLight)
-		g_GlobalLight.Position += (g_Movement * 10.0f * fDeltaTime);
+		g_PointLight.position += (g_Movement * 10.0f * fDeltaTime);
 
 	g_WindowRunning = true;
 	Sleep(10);
@@ -462,16 +494,82 @@ void DefineUniformBufferObjects()
 	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, g_uboMatrices, 0, 2 * sizeof(glm::mat4));
+
+
+
+	GLuint uniformBlockIndex = glGetUniformBlockIndex(objModelWithLights, "Lights");
+	glUniformBlockBinding(objModelWithLights, uniformBlockIndex, 1);
+
+	glGenBuffers(1, &g_uboLights);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, g_uboLights);
+	glBufferData(GL_UNIFORM_BUFFER, (15 * sizeof(glm::vec4)), NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBufferRange(GL_UNIFORM_BUFFER, 2, g_uboLights, 0, 15 * sizeof(glm::vec4));
 }
 
 void BindUBO()
 {
 	glBindBuffer(GL_UNIFORM_BUFFER, g_uboMatrices);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(g_Camera.GetProjectionMatrix()));
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-	glBindBuffer(GL_UNIFORM_BUFFER, g_uboMatrices);
 	glBufferSubData(GL_UNIFORM_BUFFER, 1 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(g_Camera.GetViewMatrix()));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+	glBindBuffer(GL_UNIFORM_BUFFER, g_uboLights);
+						//					OFFSET									//SIZE OF DATA		// DATA
+	glBufferSubData(GL_UNIFORM_BUFFER, 0 * sizeof(glm::vec4)					 , sizeof(glm::vec4) , glm::value_ptr(g_DirLight.direction));
+	glBufferSubData(GL_UNIFORM_BUFFER, 1 * sizeof(glm::vec4)					 , sizeof(glm::vec4) , glm::value_ptr(g_DirLight.ambient));
+	glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::vec4)					 , sizeof(glm::vec4) , glm::value_ptr(g_DirLight.diffuse));
+	glBufferSubData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::vec4)					 , sizeof(glm::vec4) , glm::value_ptr(g_DirLight.specular));
+	glBufferSubData(GL_UNIFORM_BUFFER, 4 * sizeof(glm::vec4)					 , sizeof(glm::vec4) , glm::value_ptr(g_PointLight.position));
+	glBufferSubData(GL_UNIFORM_BUFFER, 5 * sizeof(glm::vec4)					 , sizeof(glm::vec4) , glm::value_ptr(g_PointLight.ambient));
+	glBufferSubData(GL_UNIFORM_BUFFER, 6 * sizeof(glm::vec4)					 , sizeof(glm::vec4) , glm::value_ptr(g_PointLight.diffuse));
+	glBufferSubData(GL_UNIFORM_BUFFER, 7 * sizeof(glm::vec4)					 , sizeof(glm::vec4) , glm::value_ptr(g_PointLight.specular));
+	glBufferSubData(GL_UNIFORM_BUFFER, 8 * sizeof(glm::vec4)					 , sizeof(float)	 , &g_PointLight.constant);
+	glBufferSubData(GL_UNIFORM_BUFFER, 8 * sizeof(glm::vec4) + sizeof(float)	 , sizeof(float)	 , &g_PointLight.linear);
+	glBufferSubData(GL_UNIFORM_BUFFER, 8 * sizeof(glm::vec4) + (sizeof(float) * 2) , sizeof(float)	 , &g_PointLight.quadratic);
+	glBufferSubData(GL_UNIFORM_BUFFER, 9 * sizeof(glm::vec4) - sizeof(float)     , sizeof(glm::vec4) , glm::value_ptr(g_SpotLight.position));
+	glBufferSubData(GL_UNIFORM_BUFFER, 10 * sizeof(glm::vec4) - sizeof(float)    , sizeof(glm::vec4) , glm::value_ptr(g_SpotLight.direction));
+	glBufferSubData(GL_UNIFORM_BUFFER, 11 * sizeof(glm::vec4) - sizeof(float)	 , sizeof(glm::vec4) , glm::value_ptr(g_SpotLight.ambient));
+	glBufferSubData(GL_UNIFORM_BUFFER, 12 * sizeof(glm::vec4) - sizeof(float)	 , sizeof(glm::vec4) , glm::value_ptr(g_SpotLight.diffuse));
+	glBufferSubData(GL_UNIFORM_BUFFER, 13 * sizeof(glm::vec4) - sizeof(float)	 , sizeof(glm::vec4) , glm::value_ptr(g_SpotLight.specular));
+	glBufferSubData(GL_UNIFORM_BUFFER, 13 * sizeof(glm::vec4)					 , sizeof(float)	 , &g_SpotLight.constant);
+	glBufferSubData(GL_UNIFORM_BUFFER, 13 * sizeof(glm::vec4) + sizeof(float)	 , sizeof(float)	 , &g_SpotLight.linear);
+	glBufferSubData(GL_UNIFORM_BUFFER, 13 * sizeof(glm::vec4) + sizeof(float) * 2, sizeof(float)	 , &g_SpotLight.quadratic);
+	glBufferSubData(GL_UNIFORM_BUFFER, 13 * sizeof(glm::vec4) + sizeof(float) * 3, sizeof(float)	 , &g_SpotLight.cutOff);
+	glBufferSubData(GL_UNIFORM_BUFFER, 13 * sizeof(glm::vec4) + sizeof(float) * 4, sizeof(float)	 , &g_SpotLight.outerCutOff);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+void InitLights(DirLight& dirLight, PointLight& pointLight, SpotLight& spotLight)
+{
+	dirLight = DirLight(
+		glm::vec3(-0.2f, -1.0f, -0.3f),
+		glm::vec3(0.2f),
+		glm::vec3(0.4f),
+		glm::vec3(0.5f));
+
+	pointLight = PointLight(
+		glm::vec3(0),
+		glm::vec3(0),
+		glm::vec3(0.2f),
+		glm::vec3(0.8f),
+		glm::vec3(1.0f),
+		1.0f,
+		0.09f,
+		0.032f
+	);
+
+	spotLight = SpotLight(
+		glm::vec3(0),
+		glm::vec3(0),
+		glm::vec3(0.2f),
+		glm::vec3(1),
+		glm::vec3(1),
+		1.f,
+		0.09f,
+		0.032f,
+		12.5f,
+		15.f
+	);
 }

@@ -15,13 +15,13 @@
 @Author : Cameron Peet
 @Purpose : Default Constructor without initialising view componenets. Camera not yet "Active"
 */
-Camera::Camera() 
-	: m_Viewport(0), 
+Camera::Camera()
+	: m_Viewport(0),
 	m_Position(0),
-	m_Rotation(), 
+	m_Rotation(),
 	m_ProjectionMatrix(1),
 	m_ViewMatrix(1)
-	{ }
+{ }
 
 /*
 @Author : Cameron Peet
@@ -33,7 +33,7 @@ Camera::Camera(int _iWindowWidth, int _iWindowHeight)
 	m_Rotation(),
 	m_ProjectionMatrix(1),
 	m_ViewMatrix(1)
-{ 
+{
 	m_Viewport = glm::vec4(0, 0, _iWindowWidth, _iWindowHeight);
 	glViewport(0, 0, _iWindowWidth, _iWindowHeight);
 }
@@ -87,7 +87,7 @@ glm::quat Camera::GetRotation() const
 	return m_Rotation;
 }
 
-void Camera::SetEulerAngles(const glm::vec3& eulerAngles) 
+void Camera::SetEulerAngles(const glm::vec3& eulerAngles)
 {
 	m_Rotation = glm::quat(glm::radians(eulerAngles));
 }
@@ -133,3 +133,29 @@ void Camera::UpdateViewMatrix()
 	}
 }
 
+glm::vec3 Camera::GetRayTo(int x, int y, float rayLength)
+{
+	int MAX_RAY_LENGTH = rayLength;
+
+	//Calculate normal device coordinates of x and y
+	float ndcX = (2.0f * x) / 1200.0f - 1.0f;
+	float ndcY = 1.0f - (2.0f * y) / 800.0f;
+
+	//Screen Positon in terms of OpenGL NDC coordinates
+	glm::vec2 normalisedScreenCoord = glm::vec2(ndcX, ndcY);
+
+	//Screen Position to projection space
+	glm::vec4 clipCoord = glm::vec4(normalisedScreenCoord, -1.0f, 1.0f);
+
+	//Projection Space to Eye Space
+	glm::mat4 invProjMat = glm::inverse(GetProjectionMatrix());
+	glm::vec4 eyeCoord = invProjMat * clipCoord;
+	eyeCoord = glm::vec4(eyeCoord.x, eyeCoord.y, -1.0f, 0.0f);
+
+	//Eye space to World space
+	glm::mat4 invViewMat = glm::inverse(GetViewMatrix());
+	glm::vec4 rayWorld = invViewMat * eyeCoord;
+	glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
+
+	return rayDirection *= MAX_RAY_LENGTH;
+}

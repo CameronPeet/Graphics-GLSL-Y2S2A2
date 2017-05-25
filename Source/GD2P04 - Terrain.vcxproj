@@ -21,6 +21,8 @@
   <ItemGroup>
     <None Include="assets\shaders\3D_Model.frag" />
     <None Include="assets\shaders\3D_Model.vert" />
+    <None Include="assets\shaders\3D_Model_WithLighting.frag" />
+    <None Include="assets\shaders\3D_Model_WithLighting.vert" />
     <None Include="assets\shaders\geometry_explode.frag" />
     <None Include="assets\shaders\geometry_explode.gs" />
     <None Include="assets\shaders\geometry_explode.vs" />
@@ -32,7 +34,11 @@
     <None Include="assets\shaders\geometry_show_normals.vs" />
     <None Include="assets\shaders\heightmap.fs" />
     <None Include="assets\shaders\heightmap.vs" />
+    <None Include="assets\shaders\heightmap_mult.frag" />
+    <None Include="assets\shaders\heightmap_mult.vert" />
     <None Include="assets\shaders\Multiple.frag" />
+    <None Include="assets\shaders\MultipleLights.frag" />
+    <None Include="assets\shaders\MultipleLights.vert" />
     <None Include="assets\shaders\Reflection.frag" />
     <None Include="assets\shaders\Reflection.vert" />
     <None Include="assets\shaders\Shader.frag" />

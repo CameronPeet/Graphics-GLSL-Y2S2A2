@@ -6,6 +6,7 @@
 #include "Utils.h"
 #include "Camera.h"
 #include "Light.h"
+#include "Model.h"
 
 class Terrain
 {
@@ -14,7 +15,7 @@ public:
 	Terrain(std::wstring HeightmapFilename, std::string texFileName, std::string texFileName1, std::string texFileName2, GLuint program, Camera* camera, Light* light);
 	~Terrain();
 	void Render();
-
+	void Render(RenderStruct & render);
 
 	Light* light;
 	Camera* camera;

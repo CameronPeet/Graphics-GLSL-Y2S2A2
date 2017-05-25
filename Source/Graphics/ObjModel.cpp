@@ -2,6 +2,7 @@
 
 //Header File
 #include "ObjModel.h"
+#include "Light.h"
 
 
 ObjModel::ObjModel(GLchar* path, Camera* camera, GLuint program) 
@@ -40,7 +41,34 @@ void ObjModel::Render()
 		this->meshes[i].Render(camera, program, model);
 	}
 
+	glUseProgram(0);
 }
+
+
+void ObjModel::Render(RenderStruct renderStruct)
+{
+	glm::mat4 model;
+	//Translate the model according to its position and apply the rotation
+	model = glm::translate(model, m_Position) * glm::mat4(m_Rotation);
+
+	//Rotation points
+	if (m_RotationPoint != glm::vec3(0, 0, 0))
+		model = glm::translate(model, m_Position - m_RotationPoint);
+
+	//Scale the model according to private member m_Scale
+	model = glm::scale(model, m_Scale);
+	glm::mat4 normalMatrix;
+	normalMatrix = glm::transpose(glm::inverse(model * camera->GetViewMatrix()));
+
+	for (GLuint i = 0; i < this->meshes.size(); i++) {
+
+		//printf("mesh size: %d \n", meshes.size());
+
+		this->meshes[i].Render(camera, program, model);
+	}
+}
+
+
 
 /*  Functions   */
 // Loads a ObjModel with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
@@ -141,10 +169,10 @@ Mesh ObjModel::processMesh(aiMesh* mesh, const aiScene* scene)
 		// Normal: texture_normalN
 
 		// 1. Diffuse maps
-		vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+		vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "material.texture_diffuse1");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 		// 2. Specular maps
-		vector<Texture> specularMaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+		vector<Texture> specularMaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "material.texture_specular1");
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 	}
 

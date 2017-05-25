@@ -28,7 +28,7 @@ using namespace std;
 //Local Includes
 #include "Mesh.h"
 #include "Camera.h"
-
+#include "Light.h"
 
 class ObjModel
 {
@@ -45,6 +45,7 @@ public:
 
 	//Render all of the Objects Meshes
 	void Render();	
+	void Render(RenderStruct renderStruct);
 
 //Public Data
 public:
