@@ -40,7 +40,6 @@ void Terrain::loadHeightMap() {
 	if (inFile) {
 		// Read the RAW bytes.
 		inFile.read((char*)&in[0], (std::streamsize)in.size());
-
 		// Done with file.
 		inFile.close();
 	}
@@ -123,7 +122,7 @@ void Terrain::createVerticesAndIndices() {
 
 			float y = heightmap[i*numCols + j];
 			mvertices[i*numCols + j].VertexPosition = Position(x, y, z);
-			mvertices[i*numCols + j].Normal = Normal(0.0f, 1.0f, 0.0f);
+			mvertices[i*numCols + j].Normal = Normal(0.0f, 0.0f, 0.0f);
 			mvertices[i*numCols + j].TexturePosition = TexCoord(j*du, i*dv);
 
 			// Stretch texture over grid.

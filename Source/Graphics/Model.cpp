@@ -172,6 +172,7 @@ void Model::Initialise2()
 	// Load textures
 	glGenTextures(1, &texture);
 	glGenTextures(1, &texture2);
+
 	int width, height;
 	unsigned char* image;
 	// Diffuse map
@@ -185,9 +186,9 @@ void Model::Initialise2()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 	// Specular map
-	image = SOIL_load_image(texture2Path, &width, &height, 0, SOIL_LOAD_RGBA);
+	image = SOIL_load_image(texture2Path, &width, &height, 0, SOIL_LOAD_RGB);
 	glBindTexture(GL_TEXTURE_2D, texture2);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	SOIL_free_image_data(image);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -196,8 +197,8 @@ void Model::Initialise2()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	
 }
-
 
 /* 
 @Author : Cameron Peet
@@ -285,7 +286,6 @@ void Model::Render(RenderStruct & render)
 	SpotLight& spotLight = render.spotLight;
 	glUseProgram(program);
 
-
 	dirLight.PassUniforms(program);
 	pointLight.PassUniforms(program);
 	spotLight.PassUniforms(program);
@@ -324,7 +324,7 @@ void Model::Render(RenderStruct & render)
 	glBindTexture(GL_TEXTURE_2D, texture2);
 	glUniform1i(glGetUniformLocation(program, "material.specular"), texture2);
 	
-	glUniform1f(glGetUniformLocation(program, "material.shininess"), 32.0f);
+	glUniform1f(glGetUniformLocation(program, "material.shininess"), 2.0f);
 	//Bind, draw and unbind the vertex array 
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);

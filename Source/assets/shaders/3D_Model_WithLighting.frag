@@ -48,7 +48,7 @@ struct SpotLight {
 layout (std140) uniform Lights
 {
 	DirLight dirLight;
-	PointLight pointLightss;
+	PointLight pointLight;
 	SpotLight spotLight;
 };
 
@@ -83,7 +83,8 @@ void main()
     // == ======================================
     // Phase 1: Directional lighting
     
-    vec3 result = CalcPointLight(pointLightss, material, norm, FragPos, viewDir);    
+    //vec3 result = CalcPointLight(pointLight, material, norm, FragPos, viewDir);    
+	vec3 result = CalcDirLight(dirLight, norm, viewDir);
     // Phase 3: Spot light
     
     color = vec4(result, 1.0);

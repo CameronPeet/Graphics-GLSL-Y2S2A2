@@ -81,6 +81,7 @@ void main()
     result += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
     
     color = vec4(result, 1.0);
+
 }
 
 // Calculates the color when using a directional light.

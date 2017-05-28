@@ -71,6 +71,7 @@ public:
 
 			// Now set the sampler to the correct texture unit
 			glUniform1i(glGetUniformLocation(program, (name + number).c_str()), i);
+			glUniform1f(glGetUniformLocation(program, "material.shininess"), 100.0f);
 			// And finally bind the texture
 			glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
 		}

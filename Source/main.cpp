@@ -71,6 +71,9 @@ GLuint geometry_shader_star_world;
 //Multiple Lights in UBO for 3D Model with Multiple Lights shader
 GLuint objModelWithLights;
 
+//MY NEW SHADERS
+GLuint shader3DPrimitive;
+
 //Adding shader to alist that is generating the uniform buffer objects for these shaders
 GLuint* AllShaders[] =
 { 
@@ -82,7 +85,8 @@ GLuint* AllShaders[] =
 	&geometry_show_normals,
 	&geometry_model_star,
 	&geometry_shader_star_world,
-	&multiple_light_shader
+	&multiple_light_shader,
+	&shader3DPrimitive
 };
 
 
@@ -159,10 +163,13 @@ int main(int argc, char ** argv)
 
 bool Init()
 {
+	shader3DPrimitive = shaderLoader.CreateProgram(
+		"Assets/shaders/MultipleLights.vert",
+		"Assets/shaders/MultipleLights.frag");
 
 	objModelWithLights = shaderLoader.CreateProgram(
-			"Assets/shaders/3D_Model_WithLighting.vert",
-			"Assets/shaders/3D_Model_WithLighting.frag");
+		"Assets/shaders/3D_Model.vert",
+		"Assets/shaders/3D_Model.frag");
 	//Load and create shader files
 	multiple_light_shader = shaderLoader.CreateProgram(
 		"Assets/shaders/MultipleLights.vert",
@@ -177,8 +184,8 @@ bool Init()
 		"Assets/shaders/Skybox.frag");
 
 	objModelShader	= shaderLoader.CreateProgram(
-		"Assets/shaders/3D_Model_WithLighting.vert",
-		"Assets/shaders/3D_Model_WithLighting.frag");
+		"Assets/shaders/3D_Model.vert",
+		"Assets/shaders/3D_Model.frag");
 
 	terrainShader = shaderLoader.CreateProgram(
 		"Assets/shaders/heightmap_mult.vert",
@@ -212,7 +219,7 @@ bool Init()
 
 	InitLights(g_DirLight, g_PointLight, g_SpotLight);
 
-	modelType2 = Model(CUBE, "Assets/Textures/container2.jpg", "Assets/Textures/container2.png", 32.0f);
+	modelType2 = Model(CUBE, "Assets/Textures/container2.jpg", "Assets/Textures/container2_specular.png", 32.0f);
 	modelType2.Initialise2();
 
 	g_GlobalLight.Position.y += 10.0f;
@@ -239,12 +246,12 @@ bool Init()
 	//3D Terrain Generating from a HeighMap
 	g_Terrain3D = Terrain(L"assets/heightmap/terrain.raw",
 		"assets/heightmap/sand.jpg",
-		"assets/heightmap/stones.jpg",
-		"assets/heightmap/rock.png",
+		"assets/heightmap/rock.jpg",
+		"assets/heightmap/crack.png",
 		terrainShader,
 		&g_Camera,
 		&g_GlobalLight);
-	g_Terrain3D.m_Position = glm::vec3(0.0f, -10.0f, 0.0f);
+	g_Terrain3D.m_Position = glm::vec3(0.0f, -5.0f, 0.0f);
 	g_Terrain3D.ObjectColor = glm::vec3(0.5f, 0.5f, 0.5f);
 
 	g_ModelGS = GeometryModel(geometry_model_star, &g_Camera);
@@ -273,7 +280,7 @@ void Render()
 
 	RenderStruct renderStruct = RenderStruct(multiple_light_shader, g_Camera, g_DirLight, g_PointLight, g_SpotLight);
 
-	renderStruct.program = multiple_light_shader;
+	renderStruct.program = shader3DPrimitive;
 	modelType2.Render(renderStruct);
 
 	////Render 3D Models
@@ -497,8 +504,15 @@ void DefineUniformBufferObjects()
 
 
 
-	GLuint uniformBlockIndex = glGetUniformBlockIndex(objModelWithLights, "Lights");
-	glUniformBlockBinding(objModelWithLights, uniformBlockIndex, 1);
+	GLuint uniformBlockIndex = glGetUniformBlockIndex(shader3DPrimitive, "Lights");
+	glUniformBlockBinding(shader3DPrimitive, uniformBlockIndex, 1);
+
+	//uniformBlockIndex = glGetUniformBlockIndex(objModelShader, "Lights");
+	//glUniformBlockBinding(objModelShader, uniformBlockIndex, 1);
+
+	//uniformBlockIndex = glGetUniformBlockIndex(terrainShader, "Lights");
+	//glUniformBlockBinding(terrainShader, uniformBlockIndex, 1);
+
 
 	glGenBuffers(1, &g_uboLights);
 
@@ -545,9 +559,9 @@ void InitLights(DirLight& dirLight, PointLight& pointLight, SpotLight& spotLight
 {
 	dirLight = DirLight(
 		glm::vec3(-0.2f, -1.0f, -0.3f),
-		glm::vec3(0.2f),
-		glm::vec3(0.4f),
-		glm::vec3(0.5f));
+		glm::vec3(0.5f),
+		glm::vec3(0.8f),
+		glm::vec3(0.1f));
 
 	pointLight = PointLight(
 		glm::vec3(0),
