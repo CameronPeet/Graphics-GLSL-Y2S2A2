@@ -52,6 +52,14 @@
     <None Include="assets\shaders\geometry_model_star.frag" />
     <None Include="assets\shaders\geometry_model_star.gs" />
     <None Include="assets\shaders\Multiple.frag" />
+    <None Include="assets\shaders\MultipleLights.vert" />
+    <None Include="assets\shaders\MultipleLights.frag" />
+    <None Include="assets\shaders\heightmap_mult.vert" />
+    <None Include="assets\shaders\heightmap_mult.frag" />
+    <None Include="assets\shaders\3D_Model_WithLighting.vert" />
+    <None Include="assets\shaders\3D_Model_WithLighting.frag" />
+    <None Include="assets\shaders\shader3DPrimitive.vert" />
+    <None Include="assets\shaders\shader3DPrimitive.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utility\ShaderLoader.h">
